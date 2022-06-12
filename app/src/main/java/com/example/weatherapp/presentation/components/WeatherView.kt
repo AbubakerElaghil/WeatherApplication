@@ -38,111 +38,17 @@ fun WeatherView(loading: Boolean, weather: Weather?, errorMessage: String) {
 
             weather?.let { weather ->
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                SetTimeView(weather)
 
-                ) {
-                    weather.time?.let { time ->
+                Spacer(modifier = Modifier.padding(top = 15.dp))
 
-                        val date = Date(time * 1000)
-                        //  val offset= TimeZone.getTimeZone(weather.timezoneId.toString()).rawOffset
-                        //    val adjustedDate = Date((date.time+ weather.timezoneId!!)*1000)
-                        val dateformat = SimpleDateFormat("EEEE, dd MMMM")
-                        val timeformat = SimpleDateFormat("hh:mm:ss")
-                        Text(
-                            text = dateformat.format(date),
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
-                    }
+                SetCityCountryView(weather)
 
-                }
-                Spacer(
-                    modifier = Modifier.padding(top = 15.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                Spacer(modifier = Modifier.padding(top = 15.dp))
 
-                ) {
-                    weather.time?.let { time ->
+                SetTempratureView(weather)
 
-                        val date = Date(time * 1000)
-
-                        val timeformat = SimpleDateFormat("HH:mm:ss")
-                        Text(
-                            text = timeformat.format(date),
-                            fontSize = 25.sp,
-                            color = Color.White
-                        )
-                    }
-
-                }
-                Spacer(
-                    modifier = Modifier.padding(top = 15.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-
-                ) {
-                    val cityAndCountry = "${weather.cityName}, ${weather.country} "
-                    weather.cityName?.let { city ->
-                        Text(
-                            text = cityAndCountry,
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
-                    }
-
-                }
-                Spacer(
-                    modifier = Modifier.padding(top = 15.dp)
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-
-                ) {
-                    weather.temprature?.let {
-                        val temprature = it - 273.15
-                        Text(
-                            text = "${temprature.toInt().toString()} °C",
-                            fontSize = 80.sp,
-                            color = Color.White
-                        )
-                    }
-
-                }
-                Spacer(
-                    modifier = Modifier.padding(top = 15.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-
-                ) {
-                    val weatherDetail = "Feels like ${
-                        weather.feelsLikeTemprature?.let {
-                            (it - 273.15).toInt().toString()
-                        }
-                    }°C. ${weather.mainWeather}, ${weather.description} "
-                    Text(
-                        text = weatherDetail,
-                        fontSize = 14.sp,
-                        color = Color.White
-                    )
-                }
-                Spacer(
-                    modifier = Modifier.padding(top = 35.dp)
-                )
+                Spacer(modifier = Modifier.padding(top = 35.dp))
 
                 SetWeatherDetailView(weather)
 
@@ -153,6 +59,114 @@ fun WeatherView(loading: Boolean, weather: Weather?, errorMessage: String) {
     }
 
 
+}
+
+@Composable
+fun SetTimeView(weather: Weather) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+
+    ) {
+        weather.time?.let { time ->
+
+            val date = Date(time * 1000)
+            //  val offset= TimeZone.getTimeZone(weather.timezoneId.toString()).rawOffset
+            //    val adjustedDate = Date((date.time+ weather.timezoneId!!)*1000)
+            val dateformat = SimpleDateFormat("EEEE, dd MMMM")
+            val timeformat = SimpleDateFormat("hh:mm:ss")
+            Text(
+                text = dateformat.format(date),
+                fontSize = 16.sp,
+                color = Color.White
+            )
+        }
+
+    }
+    Spacer(
+        modifier = Modifier.padding(top = 15.dp)
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+
+    ) {
+        weather.time?.let { time ->
+
+            val date = Date(time * 1000)
+
+            val timeformat = SimpleDateFormat("HH:mm:ss")
+            Text(
+                text = timeformat.format(date),
+                fontSize = 25.sp,
+                color = Color.White
+            )
+        }
+
+    }
+
+}
+
+@Composable
+fun SetCityCountryView(weather: Weather) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+
+    ) {
+        val cityAndCountry = "${weather.cityName}, ${weather.country} "
+        weather.cityName?.let { city ->
+            Text(
+                text = cityAndCountry,
+                fontSize = 16.sp,
+                color = Color.White
+            )
+        }
+
+    }
+}
+
+@Composable
+fun SetTempratureView(weather : Weather) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+
+    ) {
+        weather.temprature?.let {
+            val temprature = it - 273.15
+            Text(
+                text = "${temprature.toInt().toString()} °C",
+                fontSize = 80.sp,
+                color = Color.White
+            )
+        }
+
+    }
+    Spacer(
+        modifier = Modifier.padding(top = 15.dp)
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+
+    ) {
+        val weatherDetail = "Feels like ${
+            weather.feelsLikeTemprature?.let {
+                (it - 273.15).toInt().toString()
+            }
+        }°C. ${weather.mainWeather}, ${weather.description} "
+        Text(
+            text = weatherDetail,
+            fontSize = 14.sp,
+            color = Color.White
+        )
+    }
 }
 
 @Composable
