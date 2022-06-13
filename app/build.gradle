@@ -7,6 +7,9 @@ plugins {
 
 android {
     compileSdk 32
+    def keystorePropertiesFile = rootProject.file("keystore.properties")
+    def keystoreProperties = new Properties()
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
     defaultConfig {
         applicationId "com.example.weatherapp"
@@ -19,6 +22,8 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+        buildConfigField "String", "app_id", keystoreProperties["app_id"]
+
     }
 
     buildTypes {

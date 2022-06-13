@@ -1,4 +1,4 @@
-package com.example.weatherapp.presentation.ui.baseFragment
+package com.example.weatherapp.repository.location.request
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -7,56 +7,57 @@ import android.content.Context
 import android.content.IntentSender
 import android.location.Location
 import android.location.LocationManager
-import android.os.Bundle
 import android.os.Looper
-import android.view.View
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.fragment.app.Fragment
-import com.example.weatherapp.presentation.ui.Weather.WeatherEvent
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnSuccessListener
+import javax.inject.Inject
 
-abstract class BaseLocationFragment : Fragment() {
+class LocationRepository_Impl @Inject constructor (var activity: AppCompatActivity  ) : LocationRepository {
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit  var locationManager: LocationManager
+    private lateinit var locationValue: MutableState<Location?>
 
-    var   locationPermissionRequest = registerForActivityResult(
+    fun setLocationState(  locationValue: MutableState<Location?>){
+        this.locationValue=locationValue
+    }
+
+    var locationSettingsRequest =  activity.registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+              getLastLocation()
+        }
+    }
+    var locationPermissionRequest =  activity.registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         when {
             permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
-                startLocationProcess()
+                 startLocationProcess()
             }
             permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                startLocationProcess()
+                 startLocationProcess()
             } else -> { // No location access granted.
+
         }
         }
     }
-    val  locationSettingsRequest =  registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            getLastLocation()
-        }
+
+  override  fun startLocationRequest()  {
+         locationPermissionRequest.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+
     }
 
-    abstract fun locationIsReady(location: Location)
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        requestLocationPermission()
-    }
-
-
-    private fun requestLocationPermission() {
-        locationPermissionRequest.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION))
-    }
-    private fun startLocationProcess(){
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+      fun startLocationProcess() {
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity)
         if(isLocationEnabled()){
             getLastLocation()
         }else {
@@ -69,7 +70,7 @@ abstract class BaseLocationFragment : Fragment() {
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
-        val result = LocationServices.getSettingsClient(requireActivity()).checkLocationSettings(builder.build())
+        val result = LocationServices.getSettingsClient(activity).checkLocationSettings(builder.build())
         result.addOnCompleteListener(OnCompleteListener { task->
             try {
                 task.getResult<ApiException>(ApiException::class.java)
@@ -84,7 +85,7 @@ abstract class BaseLocationFragment : Fragment() {
                         } catch (e: IntentSender.SendIntentException) {
                             // Ignore the error.
                         } catch (e: ClassCastException) {
-                            Toast.makeText(requireContext(),e.localizedMessage, Toast.LENGTH_SHORT).show()
+                            //Toast.makeText(requireContext(),e.localizedMessage, Toast.LENGTH_SHORT).show()
                         }
                     LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {}
                 }
@@ -94,10 +95,13 @@ abstract class BaseLocationFragment : Fragment() {
     }
 
     @SuppressLint("MissingPermission")
-    private fun getLastLocation() {
-        fusedLocationClient.lastLocation.addOnSuccessListener(requireActivity(),  OnSuccessListener<Location?> { location -> // Got last known location. In some rare situations this can be null.
+      fun getLastLocation() {
+        fusedLocationClient.lastLocation.addOnSuccessListener(activity,  OnSuccessListener<Location?> { location -> // Got last known location. In some rare situations this can be null.
             location?.let {location ->
-                locationIsReady(location)
+                if(locationValue.value==null) {
+                    locationValue.value = location
+                }
+
             }
         })
         val locationRequest: LocationRequest = LocationRequest.create()
@@ -107,7 +111,9 @@ abstract class BaseLocationFragment : Fragment() {
             override fun onLocationResult(locationResult: LocationResult) {
                 for (location in locationResult.locations) {
                     location?.let {location ->
-                      locationIsReady(location)
+                        if(locationValue.value==null) {
+                            locationValue.value = location
+                        }
                     }
                 }
             }
@@ -121,7 +127,7 @@ abstract class BaseLocationFragment : Fragment() {
     }
 
     private fun isLocationEnabled(): Boolean {
-        locationManager  =requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationManager  =activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 

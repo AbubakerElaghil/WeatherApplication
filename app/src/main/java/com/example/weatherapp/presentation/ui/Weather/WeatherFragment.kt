@@ -1,21 +1,11 @@
 package com.example.weatherapp.presentation.ui.Weather
 
-import android.Manifest
-import android.annotation.SuppressLint
-import android.app.Activity.RESULT_OK
-import android.content.Context
-import android.content.IntentSender.SendIntentException
 import android.location.Location
-import android.location.LocationManager
 import android.os.Bundle
-import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
@@ -25,21 +15,29 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.weatherapp.presentation.components.SearchAppBar
 import com.example.weatherapp.presentation.components.WeatherView
-import com.example.weatherapp.presentation.ui.baseFragment.BaseLocationFragment
-import com.example.weatherapp.presentation.ui.theme.WeatherAppTheme
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.*
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.OnSuccessListener
+ import com.example.weatherapp.presentation.ui.theme.WeatherAppTheme
+import com.example.weatherapp.repository.location.request.LocationRepository
+import com.example.weatherapp.repository.location.request.LocationRepository_Impl
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class WeatherFragment : BaseLocationFragment() {
+class WeatherFragment  : Fragment()  {
+
+    @Inject
+    lateinit var locationRepository: LocationRepository
 
     private val viewModel: WeatherViewModel by viewModels()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        listenToLocation()
+    }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        locationRepository.startLocationRequest()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -53,8 +51,6 @@ class WeatherFragment : BaseLocationFragment() {
         }
     }
 
-
-
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable
     private fun SetWeatherView() {
@@ -62,6 +58,8 @@ class WeatherFragment : BaseLocationFragment() {
         val loading = viewModel.loading.value
         val weather = viewModel.weather.value
         val errorMessage = viewModel.errorMessage.value
+        checkLocation(viewModel.location.value)
+
         WeatherAppTheme(false) {
 
             Column() {
@@ -85,11 +83,15 @@ class WeatherFragment : BaseLocationFragment() {
 
     }
 
-    override fun locationIsReady(location: Location) {
-        if(viewModel.location.value==null) {
-            viewModel.location.value = location
+    private fun checkLocation(location: Location?) {
+        location?.let {
+            if(!viewModel.alreadySentByLocationRequest)
             viewModel.onTriggerEvent(WeatherEvent.WeatherByLocation)
         }
+    }
+
+    fun listenToLocation() {
+      (locationRepository as LocationRepository_Impl).setLocationState(viewModel.location)
     }
 
 }

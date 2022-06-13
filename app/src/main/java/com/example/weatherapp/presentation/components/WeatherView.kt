@@ -75,7 +75,6 @@ fun SetTimeView(weather: Weather) {
             //  val offset= TimeZone.getTimeZone(weather.timezoneId.toString()).rawOffset
             //    val adjustedDate = Date((date.time+ weather.timezoneId!!)*1000)
             val dateformat = SimpleDateFormat("EEEE, dd MMMM")
-            val timeformat = SimpleDateFormat("hh:mm:ss")
             Text(
                 text = dateformat.format(date),
                 fontSize = 16.sp,

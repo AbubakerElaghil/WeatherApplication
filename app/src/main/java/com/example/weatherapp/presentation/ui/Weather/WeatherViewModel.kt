@@ -8,19 +8,20 @@ import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.domain.model.Weather
 import com.example.weatherapp.repository.weather.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.lang.Exception
 import javax.inject.Inject
 
 @HiltViewModel
-class WeatherViewModel @Inject constructor(private val weatherRepository: WeatherRepository) :
-    ViewModel() {
-    val weather: MutableState<Weather?> = mutableStateOf(null)
+class WeatherViewModel @Inject constructor(private val weatherRepository: WeatherRepository) : ViewModel()    {
+     val weather: MutableState<Weather?> = mutableStateOf(null)
     val errorMessage: MutableState<String> = mutableStateOf("")
     val loading = mutableStateOf(false)
     val cityQuery: MutableState<String> = mutableStateOf("")
-    val location: MutableState<Location?> = mutableStateOf(null)
+      var location: MutableState<Location?> = mutableStateOf(null)
 
+    var alreadySentByLocationRequest= false
 
     fun onTriggerEvent(event: WeatherEvent) {
         viewModelScope.launch {
@@ -47,6 +48,8 @@ class WeatherViewModel @Inject constructor(private val weatherRepository: Weathe
     }
 
     private suspend fun getWeatherByLocation() {
+        alreadySentByLocationRequest=true
+
         location.value?.let { location ->
             val weatherResult = weatherRepository.getWeatherByLocation(
                 location.latitude.toString(),
